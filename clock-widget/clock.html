@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="60">
+  <title>Advanced Clock Widget</title>
+  <style>
+    :root {
+      --bg-dark: #1e1e2f;
+      --text-dark: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-dark);
+      color: var(--text-dark);
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      transition: background 0.3s, color 0.3s;
+      position: relative;
+    }
+
+    .clock {
+      background: #2b2b3d;
+      border-radius: 24px;
+      padding: 30px 40px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .time {
+      font-size: 4rem;
+      font-weight: bold;
+    }
+
+    .date {
+      font-size: 1.2rem;
+      margin-top: 5px;
+    }
+
+    /* Analog Clock */
+    .analog {
+      width: 150px;
+      height: 150px;
+      border: 6px solid currentColor;
+      border-radius: 50%;
+      position: relative;
+      margin: 20px auto;
+    }
+
+    .hand {
+      position: absolute;
+      width: 50%;
+      height: 2px;
+      background: currentColor;
+      top: 50%;
+      left: 50%;
+      transform-origin: 0% 50%;
+      transform: rotate(90deg);
+    }
+
+    .hour { height: 4px; width: 35%; }
+    .minute { height: 3px; width: 45%; }
+    .second { height: 2px; width: 50%; background: crimson; }
+
+    /* Overflow Menu */
+    .menu-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: transparent;
+      border: none;
+      font-size: 1.8rem;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .menu {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 10;
+      font-size: 0.9rem;
+    }
+
+    .menu label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .menu input[type="color"],
+    .menu input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    .menu.active {
+      display: flex;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-toggle" id="menuToggle">⋮</button>
+
+  <div class="menu" id="menu">
+    <label>
+      BG
+      <input type="color" id="bgColor" value="#1e1e2f">
+    </label>
+    <label>
+      Text
+      <input type="color" id="textColor" value="#ffffff">
+    </label>
+    <label>
+      Show Seconds
+      <input type="checkbox" id="toggleSecs" checked>
+    </label>
+    <label>
+      Analog Clock
+      <input type="checkbox" id="analogToggle">
+    </label>
+  </div>
+
+  <div class="clock" id="digitalClock">
+    <div class="time" id="time">--:--</div>
+    <div class="date" id="date">Loading...</div>
+  </div>
+
+  <div class="analog hidden" id="analogClock">
+    <div class="hand hour" id="hourHand"></div>
+    <div class="hand minute" id="minuteHand"></div>
+    <div class="hand second" id="secondHand"></div>
+  </div>
+
+  <script>
+    const timeEl = document.getElementById('time');
+    const dateEl = document.getElementById('date');
+    const digitalClock = document.getElementById('digitalClock');
+    const analogClock = document.getElementById('analogClock');
+    const hourHand = document.getElementById('hourHand');
+    const minuteHand = document.getElementById('minuteHand');
+    const secondHand = document.getElementById('secondHand');
+
+    const bgColorPicker = document.getElementById('bgColor');
+    const textColorPicker = document.getElementById('textColor');
+    const toggleSecs = document.getElementById('toggleSecs');
+    const analogToggle = document.getElementById('analogToggle');
+    const menu = document.getElementById('menu');
+    const menuToggle = document.getElementById('menuToggle');
+
+    function updateClock() {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const s = now.getSeconds();
+
+      const formattedTime = toggleSecs.checked
+        ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+        : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      timeEl.textContent = formattedTime;
+
+      dateEl.textContent = now.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+
+      const hourDeg = ((h % 12) + m / 60) * 30;
+      const minuteDeg = (m + s / 60) * 6;
+      const secondDeg = s * 6;
+
+      hourHand.style.transform = `rotate(${hourDeg}deg)`;
+      minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+      secondHand.style.transform = `rotate(${secondDeg}deg)`;
+    }
+
+    // Interval
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Menu logic
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menu.classList.toggle('active');
+    });
+
+    window.addEventListener('click', () => {
+      menu.classList.remove('active');
+    });
+
+    menu.addEventListener('click', e => e.stopPropagation());
+
+    // Color pickers
+    bgColorPicker.addEventListener('input', () => {
+      document.body.style.background = bgColorPicker.value;
+    });
+
+    textColorPicker.addEventListener('input', () => {
+      document.body.style.color = textColorPicker.value;
+      document.querySelectorAll('.hand').forEach(h => h.style.background = textColorPicker.value);
+    });
+
+    toggleSecs.addEventListener('change', updateClock);
+
+    analogToggle.addEventListener('change', () => {
+      const isAnalog = analogToggle.checked;
+      analogClock.classList.toggle('hidden', !isAnalog);
+      digitalClock.classList.toggle('hidden', isAnalog);
+    });
+  </script>
+</body>
+</html>
